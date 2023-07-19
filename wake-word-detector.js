@@ -13,9 +13,8 @@ DEVICE_INDEX = process.env.DEVICE_INDEX || 0
 ACCESS_KEY = process.env.ACCESS_KEY || ""
 
 
-const accessKey = ""
 let porcupine = new Porcupine(
-    accessKey,
+    ACCESS_KEY,
     [BuiltinKeyword.GRASSHOPPER, BuiltinKeyword.BUMBLEBEE],
     [0.5, 0.65]
 );
@@ -55,8 +54,13 @@ async function detected() {
 class WakeWordDetector extends EventEmitter {
 
     immediate = null;
+    onPause = false;
 
     someFunc = async (cb) => {
+        if(this.onPause){
+            return;
+        }
+        console.log('Reading...');
         const pcm = await recorder.read();
         const keywordIndex = porcupine.process(pcm);
         if (keywordIndex === 0) {
@@ -87,15 +91,16 @@ class WakeWordDetector extends EventEmitter {
     }
 
     start() {
+        this.onPause = false;
         recorder.start()
         this.someFunc(() => {
-            this.write('With ES6')
             console.log('done');
         })
 
     }
 
     stop() {
+        this.onPause = true;
         clearImmediate(this.immediate);
         recorder.stop()
     }
@@ -103,7 +108,7 @@ class WakeWordDetector extends EventEmitter {
 
 const wakeWordDetector = new WakeWordDetector();
 
-wakeWordDetector.on('data', (data) => {
+/*wakeWordDetector.on('data', (data) => {
     console.log(`Received data: "${data}"`);
 
     setTimeout(() => {
@@ -111,7 +116,7 @@ wakeWordDetector.on('data', (data) => {
     }, 3000)
 });
 
-wakeWordDetector.start()
+wakeWordDetector.start()*/
 //stream.write('With ES6')
 
 //setImmediate(someFunc);
@@ -156,5 +161,5 @@ const listenForWakeWord = () => {
 
 
 module.exports = {
-    listenForWakeWord
+    WakeWordDetector
 }
