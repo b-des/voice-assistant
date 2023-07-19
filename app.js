@@ -5,62 +5,40 @@ const axios = require("axios");
 const sound = require("sound-play");
 const path = require("path");
 const mic = require("mic");
-const record = require('node-mic-record')
 //const {handleMicData} = require("./handler");
 const  handler = require("./handler");
-const  myRecognizer = require("./recognizer");
-const  wakeDetector = require("./wake-word-detector");
-const { SpeechRecorder, devices } = require("speech-recorder");
+const  recognizer = require("./recognizer");
+//const  wakeDetector = require("./wake-word-detector");
 const WavFileWriter = require('wav').FileWriter;
 
 
+
 MODEL_PATH = "./vosk-model-small-uk-v3-small"
-SAMPLE_RATE = 16000
+//SAMPLE_RATE = 16000
+SAMPLE_RATE = process.env.SAMPLE_RATE || 16000
+DEVICE_NAME = process.env.DEVICE_NAME || ''
 
-if (!fs.existsSync(MODEL_PATH)) {
-    console.log("Please download the model from https://alphacephei.com/vosk/models and unpack as " + MODEL_PATH + " in the current folder.")
-    process.exit()
-}
-
-vosk.setLogLevel(0);
-const model = new vosk.Model(MODEL_PATH);
-const recognizer = new vosk.Recognizer({model: model, sampleRate: SAMPLE_RATE});
 
 const micInstance = mic({
     rate: String(SAMPLE_RATE),
     channels: '1',
     debug: false,
-    exitOnSilence: 6
-    // device: 'default',
+    exitOnSilence: 6,
+    device: DEVICE_NAME,
 });
 
 const micInputStream = micInstance.getAudioStream();
-
-const init = handler.init(recognizer, micInstance);
 
 
 
 //micInputStream.on('data', data => init.handleMicData(data));
 
-micInputStream.on('audioProcessExitComplete', () => {
-    console.log("Cleaning up");
-    console.log(recognizer.finalResult());
-    recognizer.free();
-    model.free();
-});
-
 
 
 
 process.on('SIGINT', () => {
-    console.log("\nStopping");
-    porcupine.release()
-    recorder.release();
-    micInstance.stop();
-});
-
-micInputStream.on('error', (err) => {
-    console.log("Error in Input Stream: " + err);
+    console.log("Stopping");
+    process.exit(0)
 });
 
 
@@ -71,47 +49,65 @@ micInputStream.on('error', (err) => {
 
 //const writeStream = fs.createWriteStream("./audio.wav", { encoding: 'binary' });
 
-let writeStream = new WavFileWriter("./audio.wav", {
-    sampleRate: 16000,
-    bitDepth: 16,
-    channels: 1
+
+
+micInputStream.on('data', function(data) {
+    console.log("Recieved Input Stream: " + data.length);
 });
 
-console.log(devices());
+micInputStream.on('error', function(err) {
+    cosole.log("Error in Input Stream: " + err);
+});
 
-console.log("Recording for 5 seconds...");
-//speechRecorder.start();
+micInputStream.on('startComplete', function() {
+    console.log("Got SIGNAL startComplete");
+});
+
+micInputStream.on('stopComplete', function() {
+    console.log("Got SIGNAL stopComplete");
+    recognizer.recognize()
+});
+
+micInputStream.on('pauseComplete', function() {
+    console.log("Got SIGNAL pauseComplete");
+});
 
 micInputStream.on('resumeComplete', function() {
     console.log("Got SIGNAL resumeComplete");
-    setTimeout(function() {
-        micInstance.stop();
-    }, 5000);
 });
 
 micInputStream.on('silence', function() {
     console.log("Got SIGNAL silence");
     setTimeout(function() {
-        console.log("Stopping microphone")
         micInstance.stop();
-        myRecognizer.recognize()
-    }, 1000);
+    }, 5000);
 });
 
+micInputStream.on('processExitComplete', function() {
+    console.log("Got SIGNAL processExitComplete");
+});
 
+let writeStream = new WavFileWriter("./audio.wav", {
+    sampleRate: SAMPLE_RATE,
+    bitDepth: 16,
+    channels: 1
+});
 
+micInputStream.pipe(writeStream);
+micInstance.start();
+
+/*
 wakeDetector.listenForWakeWord().then(d => {
     micInputStream.pipe(writeStream);
     micInstance.start();
 })
+*/
 
 
 
-// Import module.
-const AudioRecorder = require('node-audiorecorder')
 
 // Initialize recorder and file stream.
-const audioRecorder = new AudioRecorder({
+/*const audioRecorder = new AudioRecorder({
     program: 'sox',
     silence: 2,
     thresholdStart: 0.1,        // Silence threshold to start recording.
@@ -125,7 +121,7 @@ audioRecorder.on('error', function () {
 });
 audioRecorder.on('end', function () {
     console.warn('Recording ended.');
-});
+});*/
 
 /*audioRecorder.start()
 audioRecorder.stream().pipe(writeStream);

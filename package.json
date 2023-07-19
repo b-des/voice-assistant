@@ -17,12 +17,12 @@
     "ffi-napi": "^4.0.3",
     "fs": "^0.0.1-security",
     "mic": "^2.1.2",
-    "node-audiorecorder": "^3.0.0",
+
     "node-gyp-build": "^4.6.0",
-    "node-mic-record": "^0.0.1",
+
     "ref-napi": "^3.0.3",
     "sound-play": "^1.1.0",
-    "speech-recorder": "^2.1.0",
+
     "vosk": "^0.3.39",
     "wav": "^1.0.2"
   }
