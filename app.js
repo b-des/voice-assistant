@@ -15,6 +15,8 @@ const WavFileWriter = require('wav').FileWriter;
 SAMPLE_RATE = process.env.SAMPLE_RATE || 16000
 DEVICE_NAME = process.env.DEVICE_NAME || ''
 
+let firstStart = true;
+
 
 const micInstance = mic({
     rate: String(SAMPLE_RATE),
@@ -40,7 +42,7 @@ process.on('SIGINT', () => {
 
 
 micInputStream.on('data', function (data) {
-    //console.log("Recieved Input Stream: " + data.length);
+    console.log("Recieved Input Stream: " + data.length);
 });
 
 micInputStream.on('error', function (err) {
@@ -53,11 +55,19 @@ micInputStream.on('startComplete', function () {
 
 micInputStream.on('stopComplete', function () {
     console.log("Got SIGNAL stopComplete");
-    recognizer.recognize()
+    //recognizer.recognize();
+    detector.start()
 });
 
 micInputStream.on('pauseComplete', function () {
     console.log("Got SIGNAL pauseComplete");
+    if(!firstStart){
+        recognizer.recognize();
+        detector.start()
+
+    }
+
+    firstStart = false;
 });
 
 micInputStream.on('resumeComplete', function () {
@@ -66,10 +76,12 @@ micInputStream.on('resumeComplete', function () {
 
 micInputStream.on('silence', function () {
     console.log("Got SIGNAL silence");
-    setTimeout(function () {
-        micInstance.stop();
-        detector.start();
-    }, 1000);
+    if(!firstStart){
+        setTimeout(function () {
+            micInstance.pause();
+        }, 1000);
+    }
+
 });
 
 micInputStream.on('processExitComplete', function () {
@@ -90,10 +102,16 @@ const detector = new wakeDetector.WakeWordDetector();
 detector.on("data", d => {
     console.log(d);
     detector.stop()
-    micInstance.start();
+    micInstance.resume();
 })
+micInstance.start();
+micInstance.pause();
 
 detector.start()
+
+setInterval(()=>{
+    //recognizer.recognize();
+}, 2000)
 
 
 /*

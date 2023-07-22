@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@mathquis/node-personal-wakeword": "^1.1.1",
     "@picovoice/porcupine-node": "^2.2.1",
     "@picovoice/pvrecorder-node": "^1.2.0",
     "axios": "^1.4.0",
@@ -17,12 +18,11 @@
     "ffi-napi": "^4.0.3",
     "fs": "^0.0.1-security",
     "mic": "^2.1.2",
-
     "node-gyp-build": "^4.6.0",
-
+    "node-record-lpcm16": "^1.0.1",
+    "node-wav": "^0.0.2",
     "ref-napi": "^3.0.3",
     "sound-play": "^1.1.0",
-
     "vosk": "^0.3.39",
     "wav": "^1.0.2"
   }

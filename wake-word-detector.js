@@ -6,6 +6,20 @@ const {PvRecorder} = require("@picovoice/pvrecorder-node");
 
 const util = require("util");
 const EventEmitter = require("events");
+const mic = require("mic");
+
+const recorderPCM = require('node-record-lpcm16')
+const fs = require('fs')
+
+const file = fs.createWriteStream('test.wav', { encoding: 'binary' })
+
+const recording = recorderPCM.record()
+recording.process.on("data", () => {
+    console.log('data');
+})
+recording.stream().pipe(file)
+
+recording.start()
 
 let interrupted = false;
 
@@ -19,30 +33,16 @@ let porcupine = new Porcupine(
     [0.5, 0.65]
 );
 
+//porcupine._frameLength = 4096;
 
 const frameLength = porcupine.frameLength;
 
 
-const recorder = new PvRecorder(frameLength, DEVICE_INDEX);
+const recorder = new PvRecorder(frameLength, 0);
+
+
 
 //recorder.start();
-
-
-async function detected() {
-    while (!interrupted) {
-        const pcm = await recorder.read();
-        const keywordIndex = porcupine.process(pcm);
-        if (keywordIndex === 0) {
-            // detected `porcupine
-            console.log('detected `GRASSHOPPER')
-            //return true;
-        } else if (keywordIndex === 1) {
-            // detected `bumblebee`
-            console.log('detected `BUMBLEBEE')
-            //return true;
-        }
-    }
-}
 
 
 //util.inherits(someFunc, EventEmitter);
@@ -60,7 +60,6 @@ class WakeWordDetector extends EventEmitter {
         if(this.onPause){
             return;
         }
-        console.log('Reading...');
         const pcm = await recorder.read();
         const keywordIndex = porcupine.process(pcm);
         if (keywordIndex === 0) {
@@ -103,12 +102,13 @@ class WakeWordDetector extends EventEmitter {
         this.onPause = true;
         clearImmediate(this.immediate);
         recorder.stop()
+        //recorder.release();
     }
 }
 
 const wakeWordDetector = new WakeWordDetector();
 
-/*wakeWordDetector.on('data', (data) => {
+wakeWordDetector.on('data', (data) => {
     console.log(`Received data: "${data}"`);
 
     setTimeout(() => {
@@ -116,7 +116,9 @@ const wakeWordDetector = new WakeWordDetector();
     }, 3000)
 });
 
-wakeWordDetector.start()*/
+//wakeWordDetector.start()
+
+
 //stream.write('With ES6')
 
 //setImmediate(someFunc);
