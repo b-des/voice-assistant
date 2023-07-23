@@ -8,18 +8,8 @@ const util = require("util");
 const EventEmitter = require("events");
 const mic = require("mic");
 
-const recorderPCM = require('node-record-lpcm16')
 const fs = require('fs')
 
-const file = fs.createWriteStream('test.wav', { encoding: 'binary' })
-
-const recording = recorderPCM.record()
-recording.process.on("data", () => {
-    console.log('data');
-})
-recording.stream().pipe(file)
-
-recording.start()
 
 let interrupted = false;
 
